@@ -1,3 +1,5 @@
+package spring_tests;
+
 import org.springframework.data.annotation.Id;
 
 public class SmallDoc {

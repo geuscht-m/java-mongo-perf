@@ -1,6 +1,8 @@
-//package spring_data_test;
+package spring_tests;
 
 import java.util.ArrayList;
+import java.util.Random;
+
 import org.springframework.data.annotation.Id;
 
 public class LargeDoc {
@@ -23,7 +25,7 @@ public class LargeDoc {
 	binaryField = binData;
 	lotsOfStuff = new ArrayList<String>();
     }
-
+    
     private byte[] intToByteArray(int to_convert) {
 	return new byte[] {
 	    (byte) ((to_convert >> 24) & 0xFF),
