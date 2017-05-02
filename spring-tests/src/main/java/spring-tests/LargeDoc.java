@@ -1,15 +1,20 @@
-package spring_data_test;
+//package spring_data_test;
 
-//import org.springframework.data.annotation.Id;
+import java.util.ArrayList;
+import org.springframework.data.annotation.Id;
 
 public class LargeDoc {
+
+    @Id
+    public String Id;
+    
     public String testStringField;
     public byte[] binaryField;
     public ArrayList<String> lotsOfStuff;
 
     public LargeDoc() {
 	testStringField = new String("");
-	binaryField = 0xDEADBEEF;
+	binaryField = intToByteArray(0xDEADBEEF);
 	lotsOfStuff = new ArrayList<String>();
     }
 
@@ -17,5 +22,14 @@ public class LargeDoc {
 	testStringField = testField;
 	binaryField = binData;
 	lotsOfStuff = new ArrayList<String>();
+    }
+
+    private byte[] intToByteArray(int to_convert) {
+	return new byte[] {
+	    (byte) ((to_convert >> 24) & 0xFF),
+	    (byte) ((to_convert >> 16) & 0xFF),   
+	    (byte) ((to_convert >> 8) & 0xFF),   
+	    (byte) (to_convert & 0xFF)
+	};
     }
 }
