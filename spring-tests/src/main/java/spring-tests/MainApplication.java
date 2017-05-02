@@ -16,5 +16,21 @@ public class MainApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+	runInsertTests();
+	runUpdateTests();
+	runReadTests();
+	runDeleteTests();
+    }
+
+    private void runInsertTests() {
+    }
+
+    private void runUpdateTests() {
+    }
+
+    private void runReadTests() {
+    }
+
+    private void runDeleteTests() {
     }
 }
