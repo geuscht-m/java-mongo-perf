@@ -22,15 +22,19 @@ public class MainApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 	initialiseTests();
-	
+
+	System.console().printf("Starting insert tests\n");
 	runInsertTests();
+	System.console().printf("Starting update tests\n");
 	runUpdateTests();
 	runReadTests();
 	runDeleteTests();
     }
 
     private void initialiseTests() {
+	System.console().printf("Initializing tests\n");
 	largeDocs.deleteAll();
+	System.console().printf("Done initializing tests\n");
     }
     
     private void runInsertTests() {
