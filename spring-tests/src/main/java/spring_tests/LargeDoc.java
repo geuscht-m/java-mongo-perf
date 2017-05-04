@@ -1,10 +1,12 @@
 package spring_tests;
 
 import java.util.ArrayList;
-import java.util.Random;
+//import java.util.Random;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document
 public class LargeDoc {
 
     @Id
@@ -13,6 +15,7 @@ public class LargeDoc {
     public String testStringField;
     public byte[] binaryField;
     public ArrayList<String> lotsOfStuff;
+    public String largeAmountOfText;
 
     public LargeDoc() {
 	testStringField = new String("");

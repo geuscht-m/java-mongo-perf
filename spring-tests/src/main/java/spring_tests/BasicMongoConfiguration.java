@@ -1,4 +1,4 @@
-package spring-tests;
+package spring_tests;
 
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.context.annotation.Bean;

@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.unix-consult.</groupId>
-    <artifactId>java-mongo-perf-tests-spring</artifactId>
+    <artifactId>java-mongo-perf-tests-spring-data</artifactId>
     <version>0.0.1</version>
 
     <parent>
