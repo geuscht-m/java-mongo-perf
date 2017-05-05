@@ -120,14 +120,8 @@ public class MainApplication implements CommandLineRunner {
 	    Query q = new Query();
 	    q.addCriteria(Criteria.where("_id").is(doc.Id));
 	    Update up = new Update();
-	    up.push("lotsOfStuff", "The");
-	    up.push("lotsOfStuff", "joy");
-	    up.push("lotsOfStuff", "of king");
-	    up.push("lotsOfStuff", "and");
-	    up.push("lotsOfStuff", "retainers is,");
-	    up.push("lotsOfStuff", "however,");
-	    up.push("lotsOfStuff", "of");
-	    up.push("lotsofStuff", "short duration.");
+	    up.push("lotsOfStuff")
+		.each("The", "joy", "of king", "and", "retainers is,", "however,", "of", "short duration.");
 	    long startNS = System.nanoTime();
 	    mongoOp.updateFirst(q, up, LargeDoc.class);
 	    long endNS   = System.nanoTime();
