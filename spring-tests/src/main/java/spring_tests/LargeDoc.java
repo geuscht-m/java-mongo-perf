@@ -4,6 +4,8 @@ import java.util.ArrayList;
 //import java.util.Random;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
@@ -11,7 +13,8 @@ public class LargeDoc {
 
     @Id
     public String Id;
-    
+
+    @Indexed
     public String testStringField;
     public byte[] binaryField;
     public ArrayList<String> lotsOfStuff;
