@@ -195,6 +195,17 @@ public class MainApplication implements CommandLineRunner {
 	System.console().printf("Searching and iterating over %d elements took %d ms\n",
 				docs.size(), timeInMS);
 	System.console().printf("Average search/iteration time per element: %d ms\n", timeInMS / docs.size());
+
+	measuredTimes.clear();
+	startNS = System.nanoTime();
+	List<SmallDoc> sdocs = smallDocs.findAll();
+	for (SmallDoc doc : sdocs) {
+	}
+	endNS = System.nanoTime();
+	timeInMS = (endNS - startNS) / 1000;
+	System.console().printf("Searching and iterating over %d small documents took %d ms\n",
+				sdocs.size(), timeInMS);
+	System.console().printf("Average search/iteration time per small document: %d ms\n", timeInMS / sdocs.size());
     }
 
     private void runDeleteTests() {
