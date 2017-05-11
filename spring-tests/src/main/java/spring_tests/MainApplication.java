@@ -48,7 +48,11 @@ public class MainApplication implements CommandLineRunner {
 	System.console().printf("Initializing tests\n");
 	measuredTimes = new ArrayList<Long>(100001);
 	docgenL = new LargeDocGenerator("metamorphosis-kafka.txt");
+	docGenS = new SmallDocGenerator("huck-finn.txt");
+
 	largeDocs.deleteAll();
+	smallDocs.deleteAll();
+	
 	System.console().printf("Done initializing tests\n");
     }
     
@@ -56,7 +60,7 @@ public class MainApplication implements CommandLineRunner {
 	measuredTimes.clear();
 
 	// Large docs first
-	System.console().printf("Begin insert tests\n");
+	System.console().printf("Begin large document insert tests\n");
 	for (int i = 0; i < 100001; i++) {
 	    LargeDoc newDoc = docgenL.generateNextDoc();
 
@@ -72,15 +76,37 @@ public class MainApplication implements CommandLineRunner {
 	for (long v : measuredTimes) {
 	    stats.accept(v);
 	}
-	System.console().printf("Total execution time (ms) : %d\n", stats.getSum() / 1000);
-	System.console().printf("Average insert time (ms): %f\n", stats.getAverage() / 1000);
-	System.console().printf("Median insert time (ms): %d\n", measuredTimes.get(100001/2) / 1000);
+	System.console().printf("Large Documents: Total execution time (ms) : %d\n", stats.getSum() / 1000);
+	System.console().printf("Large Documents: Average insert time (ms):   %f\n", stats.getAverage() / 1000);
+	System.console().printf("Large Docuemtns: Median insert time (ms):    %d\n", measuredTimes.get(100001/2) / 1000);
+
+	measuredTimes.clear();
+
+	System.console().printf("Begin small document insert tests\n");
+
+	for (int i = 0; i < 200001; i++) {
+	    SmallDoc newDoc = docGenS.generateNextDoc();
+
+	    long startNS = System.nanoTime();
+	    smallDocs.save(newDoc);
+	    long endNS = System.nanoTime();
+	    measuredTimes.add(endNS - startNS);
+	}
+
+	Collections.sort(measuredTimes);
+	stats = new LongSummaryStatistics();
+	for (long v : measuredTimes) {
+	    stats.accept(v);
+	}
+	System.console().printf("Small Documents: Total execution time (ms) : %d\n", stats.getSum() / 1000);
+	System.console().printf("Small Documents: Average insert time (ms):   %f\n", stats.getAverage() / 1000);
+	System.console().printf("Small Docuemtns: Median insert time (ms):    %d\n", measuredTimes.get(100001/2) / 1000);
     }
 
     private void runUpdateViaSaveTests() {
 	measuredTimes.clear();
 	
-	System.console().printf("Begin update via save tests\n");
+	System.console().printf("Begin large document update via save tests\n");
 	List<LargeDoc> ldocs = largeDocs.findByTestStringField("a");
 	for (LargeDoc doc : ldocs) {
 	    doc.lotsOfStuff.add("or palace,");
@@ -103,9 +129,29 @@ public class MainApplication implements CommandLineRunner {
 	for (long v : measuredTimes) {
 	    stats.accept(v);
 	}
-	System.console().printf("Total   update via save execution time (ms): %d\n", stats.getSum() / 1000);
-	System.console().printf("Average update via save insert time (ms): %f\n", stats.getAverage() / 1000);
-	System.console().printf("Median  update via save insert time (ms): %d\n", measuredTimes.get(measuredTimes.size()/2) / 1000);
+	System.console().printf("Total   large document update via save execution time (ms): %d\n", stats.getSum() / 1000);
+	System.console().printf("Average large document update via save insert time (ms): %f\n", stats.getAverage() / 1000);
+	System.console().printf("Median  large document update via save insert time (ms): %d\n", measuredTimes.get(measuredTimes.size()/2) / 1000);
+
+	measuredTimes.clear();
+	System.console().printf("Begin small document update via save test\n");
+	List<SmallDoc> sdocs = smallDocs.findAll();
+	for (SmallDoc doc : sdocs) {
+	    doc.frontSpring = doc.rearSpring;
+	    long startNS = System.nanoTime();
+	    smallDocs.save(doc);
+	    long endNS = System.nanoTime();
+	    measuredTimes.add(endNS - startNS);
+	}
+
+	Collections.sort(measuredTimes);
+	stats = new LongSummaryStatistics();
+	for (long v : measuredTimes) {
+	    stats.accept(v);
+	}
+	System.console().printf("Total   small document update via save execution time (ms): %d\n", stats.getSum() / 1000);
+	System.console().printf("Average small document update via save insert time (ms): %f\n", stats.getAverage() / 1000);
+	System.console().printf("Median  small document update via save insert time (ms): %d\n", measuredTimes.get(measuredTimes.size()/2) / 1000);
     }
 
     private void runUpdateViaSingleUpdateTests() {
@@ -145,13 +191,17 @@ public class MainApplication implements CommandLineRunner {
 	for (LargeDoc doc : docs) {
 	}
 	long endNS = System.nanoTime();
+	long timeInMS = (endNS - startNS) / 1000;
 	System.console().printf("Searching and iterating over %d elements took %d ms\n",
-				docs.size(), (endNS - startNS) / 1000);
+				docs.size(), timeInMS);
+	System.console().printf("Average search/iteration time per element: %d ms\n", timeInMS / docs.size());
     }
 
     private void runDeleteTests() {
     }
 
     private LargeDocGenerator docgenL;
+    private SmallDocGenerator docGenS;
+    
     private ArrayList<Long> measuredTimes;
 }
