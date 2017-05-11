@@ -138,6 +138,15 @@ public class MainApplication implements CommandLineRunner {
     }
     
     private void runReadTests() {
+	measuredTimes.clear();
+
+	long startNS = System.nanoTime();
+	List<LargeDoc> docs = largeDocs.findByTestStringField("f");
+	for (LargeDoc doc : docs) {
+	}
+	long endNS = System.nanoTime();
+	System.console().printf("Searching and iterating over %d elements took %d ms\n",
+				docs.size(), (endNS - startNS) / 1000);
     }
 
     private void runDeleteTests() {
