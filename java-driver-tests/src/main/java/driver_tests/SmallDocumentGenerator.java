@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import org.bson.Document;
 import java.util.Arrays;
 
-class SmallDocumentGenerator {
+public class SmallDocumentGenerator implements DocumentGenerator {
     public SmallDocumentGenerator(String datafile) throws IOException {
 	currDocNum = 1;
 	wordIndex  = 0;

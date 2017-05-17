@@ -8,5 +8,6 @@ public class Main {
 
 	tr.initialiseTests();
 	tr.runInsertTests();
+	tr.runBulkInsertTests();
     }
 }

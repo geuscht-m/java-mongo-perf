@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import org.bson.Document;
 import java.util.Arrays;
 
-public class LargeDocumentGenerator {
+public class LargeDocumentGenerator implements DocumentGenerator {
     public LargeDocumentGenerator(String largeStringFile) throws IOException {
 	currentChar = 'a';
 	rnd = new Random();
