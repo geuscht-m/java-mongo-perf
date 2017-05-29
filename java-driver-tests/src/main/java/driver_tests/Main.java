@@ -11,5 +11,6 @@ public class Main {
 	tr.runSingleDocumentUpdateTests();
 	tr.dropTestCollections();
 	tr.runBulkInsertTests();
+	tr.runBulkDocumentUpdateTests();
     }
 }

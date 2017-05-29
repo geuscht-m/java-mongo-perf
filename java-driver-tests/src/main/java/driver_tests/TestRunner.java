@@ -131,7 +131,7 @@ public class TestRunner {
 
     private void logBulkInsertTestResults(String prefix, LongSummaryStatistics stats, ArrayList<Long> measuredTimes) {
 	System.console().printf("%s: Total bulk insert execution time (ms) : %d\n", prefix, stats.getSum() / 1000);
-	System.console().printf("%s: Average bulk insert time per 1000 (ms): %f\n", prefix, stats.getAverage() / 1000);
+	System.console().printf("%s: Average bulk insert time per 1000 (ms): %f, average per document (ms): %f\n", prefix, stats.getAverage() / 1000, (stats.getAverage() / (1000 * 1000)));
 	System.console().printf("%s: Median bulk insert time per 1000 (ms):  %d\n", prefix, measuredTimes.get(measuredTimes.size()/2) / 1000);
     }
     
@@ -199,6 +199,35 @@ public class TestRunner {
 	stats = prepMeasuredTimes();
 	logSingleDocUpdateTestResults("Small Document Update Test", stats, measuredTimes);
     }
+
+    private static void logBulkDocUpdateTestResults(String messagePrefix, long timeElapsed, int numDocs) {
+	long timeElapsedMS = timeElapsed / 1000;
+	System.console().printf("%s: Total bulk document update execution time (ms): %d\n", messagePrefix, timeElapsedMS);
+	System.console().printf("%s: Average bulk document update time (ms):         %d\n", messagePrefix, timeElapsedMS / numDocs);
+	//System.console().printf("%s: Median single document update time (ms):         %d\n", messagePrefix, measuredTimes.get(measuredTimes.size() / 2) / 1000);
+    }
+
+    public void runBulkDocumentUpdateTests() {
+	System.console().printf("Starting large document bulk document update tests\n");
+
+	MongoCollection ldocs = db.getCollection("largeDocs");
+	
+	long startNS = System.nanoTime();
+	ldocs.updateMany(eq("testStringField", "a"),
+			    combine(push("lotsOfStuff", "or palace,"),
+				    push("lotsOfStuff", "in which he hopes"),
+				    push("lotsOfStuff","to"),
+				    push("lotsOfStuff", "feast his liegemen"),
+				    push("lotsOfStuff", "and"),
+				    push("lotsOfStuff", "to"),
+				    push("lotsOfStuff", "give"),
+				    push("lotsOfStuff", "them"),
+				    push("lotsOfStuff", "presents.")));
+	long endNS = System.nanoTime();
+	
+	LongSummaryStatistics stats = prepMeasuredTimes();
+	logBulkDocUpdateTestResults("Large Document Bulk Update Test", endNS - startNS, LARGE_DOC_TEST_SET_SIZE);
+    }	
 
     public void runDeleteTests() {
     }
