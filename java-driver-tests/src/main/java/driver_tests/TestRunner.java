@@ -44,14 +44,28 @@ public class TestRunner {
 	measuredTimes = new ArrayList<Long>(200001);
     }
 
-    public void initialiseTests() {
+    public void dropTestCollections() {
 	MongoCollection<Document> smallDocs = db.getCollection("smallDocs");
 	smallDocs.drop();
 	MongoCollection<Document> largeDocs = db.getCollection("largeDocs");
 	largeDocs.drop();
+    }
+    
+    public void initialiseTests() {
+	dropTestCollections();
+	MongoCollection<Document> largeDocs = db.getCollection("largeDocs");
 	largeDocs.createIndex(Indexes.ascending("testStringField"));
     }
 
+    private LongSummaryStatistics prepMeasuredTimes() {
+	Collections.sort(measuredTimes);
+	LongSummaryStatistics stats = new LongSummaryStatistics();
+	for (long v : measuredTimes) {
+	    stats.accept(v);
+	}
+	return stats;	
+    }
+    
     private <T extends DocumentGenerator> LongSummaryStatistics runSingleInsertTest(T      docGen,
 										    String collectionName,
 										    int    testSize) {
@@ -66,13 +80,8 @@ public class TestRunner {
 	    long endNS = System.nanoTime();
 	    measuredTimes.add(endNS - startNS);
 	}
-
-	Collections.sort(measuredTimes);
-	LongSummaryStatistics stats = new LongSummaryStatistics();
-	for (long v : measuredTimes) {
-	    stats.accept(v);
-	}
-	return stats;
+	
+	return prepMeasuredTimes();
     }
 
     private void logSingleInsertTestResults(String messagePrefix, LongSummaryStatistics stats, ArrayList<Long> measuredTimes, int sampleSize) {
@@ -137,10 +146,16 @@ public class TestRunner {
 
 	logBulkInsertTestResults("Small Documents", stats, measuredTimes);
     }
-    
-    public void runUpdateTests() {
+
+    private static void logSingleDocUpdateTestResults(String messagePrefix, LongSummaryStatistics stats, ArrayList<Long> measuredTimes) {
+	System.console().printf("%s: Total single document update execution time (ms) : %d\n", messagePrefix, stats.getSum() / 1000);
+	System.console().printf("%s: Average single document update time (ms):          %f\n", messagePrefix, stats.getAverage() / 1000);
+	System.console().printf("%s: Median single document update time (ms):           %d\n", messagePrefix, measuredTimes.get(measuredTimes.size() / 2) / 1000);
+    }
+	
+    public void runSingleDocumentUpdateTests() {
 	measuredTimes.clear();
-	System.console().printf("Starting large document update tests\n");
+	System.console().printf("Starting large document single document update tests\n");
 
 	MongoCollection ldocs = db.getCollection("largeDocs");
 	
@@ -148,10 +163,41 @@ public class TestRunner {
 
 	while (it.hasNext()) {
 	    Document doc = it.next();
-	    // doc.append("lotsOfStuff", Array.asList("or palace,", "in which he hopes", "to", "feast his liegemen",
-	    // 					   "and", "to", "give", "them", "presents."));
 
+	    long startNS = System.nanoTime();
+	    ldocs.updateOne(eq("_id", doc.getObjectId("_id")),
+			    combine(push("lotsOfStuff", "or palace,"),
+				    push("lotsOfStuff", "in which he hopes"),
+				    push("lotsOfStuff","to"),
+				    push("lotsOfStuff", "feast his liegemen"),
+				    push("lotsOfStuff", "and"),
+				    push("lotsOfStuff", "to"),
+				    push("lotsOfStuff", "give"),
+				    push("lotsOfStuff", "them"),
+				    push("lotsOfStuff", "presents.")));
+	    long endNS = System.nanoTime();
+	    measuredTimes.add(endNS - startNS);
 	}
+
+	LongSummaryStatistics stats = prepMeasuredTimes();
+	logSingleDocUpdateTestResults("Large Document Update Test", stats, measuredTimes);
+
+	measuredTimes.clear();
+	System.console().printf("Starting small document single document update tests\n");
+
+	MongoCollection sdocs = db.getCollection("smallDocs");
+	it = sdocs.find().iterator();
+
+	while (it.hasNext()) {
+	    Document doc = it.next();
+	    long startNS = System.nanoTime();
+	    sdocs.updateOne(eq("_id", doc.getObjectId("_id")),
+			    set("frontSpring", doc.getString("rearSpring")));
+	    long endNS = System.nanoTime();
+	    measuredTimes.add(endNS - startNS);
+	}
+	stats = prepMeasuredTimes();
+	logSingleDocUpdateTestResults("Small Document Update Test", stats, measuredTimes);
     }
 
     public void runDeleteTests() {
