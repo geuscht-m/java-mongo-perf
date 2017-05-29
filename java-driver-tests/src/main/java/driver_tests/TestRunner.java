@@ -229,6 +229,25 @@ public class TestRunner {
 	logBulkDocUpdateTestResults("Large Document Bulk Update Test", endNS - startNS, LARGE_DOC_TEST_SET_SIZE);
     }	
 
+    public void runReadTests() {
+	System.console().printf("Starting large document read tests\n");
+	measuredTimes.clear();
+
+	long docCount = 0;
+	MongoCollection ldocs = db.getCollection("largeDocs");
+	long startNS = System.nanoTime();
+	MongoCursor<Document> docs = ldocs.find(eq("testStringField", "f")).iterator();
+	while (docs.hasNext()) {
+	    Document doc = docs.next();
+	    docCount++;
+	}
+	long endNS = System.nanoTime();
+
+	long timeInMS = (endNS - startNS) / 1000;
+ 	System.console().printf("Searching and iterating over %d elements took %d ms\n", docCount, timeInMS);
+	System.console().printf("Average search/iteration time per element: %d ms\n",    timeInMS / docCount);
+    }
+    
     public void runDeleteTests() {
     }
     

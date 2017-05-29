@@ -12,5 +12,7 @@ public class Main {
 	tr.dropTestCollections();
 	tr.runBulkInsertTests();
 	tr.runBulkDocumentUpdateTests();
+	tr.runReadTests();
+	tr.runDeleteTests();
     }
 }
