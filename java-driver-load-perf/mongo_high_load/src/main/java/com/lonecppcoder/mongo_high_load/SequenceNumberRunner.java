@@ -1,10 +1,11 @@
 package com.lonecppcoder.mongo_high_load;
 
 import java.lang.Thread;
+import java.lang.Runnable;
 
 import com.mongodb.MongoClient;
 
-class SequenceNumberRunner {
+class SequenceNumberRunner implements Runnable {
     public SequenceNumberRunner(String[] sequenceNames, MongoClient conn, String fqCollName) {
         names = sequenceNames;
         numSeqNumbers = sequenceNames.length;

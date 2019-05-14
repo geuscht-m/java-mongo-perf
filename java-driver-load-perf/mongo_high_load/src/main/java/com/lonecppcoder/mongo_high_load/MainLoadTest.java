@@ -1,13 +1,35 @@
 package com.lonecppcoder.mongo_high_load;
 
-/**
- * Hello world!
- *
- */
+import com.mongodb.MongoClient;
+
+import java.lang.Thread;
+import java.util.Vector;
+
 public class MainLoadTest
 {
     public static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+        MongoClient client = new MongoClient();
+        
+        Vector<Thread> Runners = new Vector<Thread>();
+
+        Runners.add(new Thread(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids")));
+        Runners.add(new Thread(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" })));
+
+        Runners.forEach((r) -> r.start());
+
+        try {
+            Runners.forEach(r -> {
+                    try {
+                        r.join();
+                    }
+                    catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+        }
+        catch (RuntimeException e) {
+            ;
+        }
     }
 }
