@@ -11,9 +11,11 @@ import org.bson.Document;
 import org.bson.BsonDocument;
 
 import java.lang.Runnable;
+import java.util.concurrent.atomic.AtomicLong;
 
-class ChangeStreamMonitor implements Runnable {
+class ChangeStreamMonitor implements Runnable, PerfDataCollector {
     public ChangeStreamMonitor(MongoClient client, String fqFromColl, String fqToColl) {
+        stats = new AtomicLong(0L);
         String dbName = fqFromColl.substring(0, fqFromColl.indexOf('.'));
         String collName = fqFromColl.substring(fqFromColl.indexOf('.') + 1);
         fromColl = client.getDatabase(dbName).getCollection(collName);
@@ -27,12 +29,19 @@ class ChangeStreamMonitor implements Runnable {
                 public void apply(final ChangeStreamDocument<Document> d) {
                     BsonDocument resumeToken = d.getResumeToken();
                     toColl.findOneAndUpdate(new Document("_id", 1), new Document("$set", new Document("resumeToken", resumeToken)), new FindOneAndUpdateOptions().upsert(true));
+                    stats.incrementAndGet();
                 }
             };
         
         fromColl.watch().forEach(updateBlock);
     }
 
-    MongoCollection fromColl;
-    MongoCollection toColl;
+    public AtomicLong getStat() {
+        return stats;
+    }
+
+    private MongoCollection fromColl;
+    private MongoCollection toColl;
+
+    private AtomicLong stats;
 }

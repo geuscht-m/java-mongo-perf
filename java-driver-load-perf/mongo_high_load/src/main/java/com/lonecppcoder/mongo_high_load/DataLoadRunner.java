@@ -5,7 +5,7 @@ import com.mongodb.MongoClient;
 import org.bson.Document;
 
 import java.lang.Runnable;
-import java.util.Vector;
+import java.lang.Thread;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.io.IOException;
 
 
-class DataLoadRunner implements Runnable {
+class DataLoadRunner implements Runnable, ProfilePrinter {
     public class TestDoc {
         public String dbName;
         public String collName;
@@ -43,23 +43,37 @@ class DataLoadRunner implements Runnable {
     }
 
     public void run() {
-        Vector<Thread> loaders = new Vector<Thread>();
+        //loaders = new Vector<Thread>();
+        loaders = new Thread[numParallel];
+        runnables = new Runnable[numParallel];
         for (int i = 0; i < numParallel; i++) {
-            loaders.add(new Thread(new DataLoader(conn, testDocuments)));
+            runnables[i] = new DataLoader(conn, testDocuments);
+            loaders[i] = new Thread(runnables[i]);
+            loaders[i].start();
         }
-        loaders.forEach(l -> l.start());
-        loaders.forEach(l -> {
-                try {
-                    l.join();
-                }
-                catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            });
 
+        for (int i = 0; i < numParallel; i++) {
+            try {
+                loaders[i].join();
+            }
+            catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+            }
+        };
+    }
+
+    public void printStats() {
+        long inserted = 0L;
+        for (int i = 0; i < runnables.length; i++) {
+            inserted += ((PerfDataCollector)runnables[i]).getAndReset();
+        };
+        System.out.printf("%d documents loaded\n");
     }
 
     private MongoClient conn;
     private TestDoc[] testDocuments;
     private int numParallel;
+
+    private Thread[] loaders;
+    private Runnable[] runnables;
 }

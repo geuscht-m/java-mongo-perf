@@ -1,7 +1,5 @@
 package com.lonecppcoder.mongo_high_load;
 
-import java.lang.Thread;
-import java.lang.Runnable;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.*;
@@ -9,12 +7,18 @@ import com.mongodb.client.model.*;
 
 import org.bson.Document;
 
-class SequenceNumberIncrementor implements Runnable {
+import java.lang.Thread;
+import java.lang.Runnable;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
+
+class SequenceNumberIncrementor implements Runnable, PerfDataCollector {
     public SequenceNumberIncrementor(MongoClient conn, String seqNumCollection, String seqNumName) {
         mongoConn = conn;
         collDB = seqNumCollection.substring(0, seqNumCollection.indexOf('.'));
         collName = seqNumCollection.substring(seqNumCollection.indexOf('.') + 1);
         this.seqNumName = seqNumName;
+        this.stats = new AtomicLong();
     }
 
     public void run() {
@@ -24,19 +28,26 @@ class SequenceNumberIncrementor implements Runnable {
         Document update = new Document("$inc", new Document("sequence", 1));
         FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().upsert(true);
 
-        try {
+        //try {
             while (true) {
                 collection.findOneAndUpdate(filter, update, options);
-                Thread.sleep(50);
+                stats.incrementAndGet();
+                //Thread.sleep(ThreadLocalRandom.current().nextInt(7, 45));
             }
-        }
-        catch (InterruptedException e) {
-            ;
-        }
+            //}
+        //catch (InterruptedException e) {
+        //    ;
+        //}
+    }
+
+    public AtomicLong getStat() {
+        return stats;
     }
 
     private MongoClient mongoConn;
     private String      collDB;
     private String      collName;
     private String      seqNumName;
+
+    private AtomicLong  stats;
 }

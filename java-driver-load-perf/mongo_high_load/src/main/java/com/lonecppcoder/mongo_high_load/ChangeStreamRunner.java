@@ -4,32 +4,43 @@ import com.mongodb.MongoClient;
 
 import java.lang.Runnable;
 import java.lang.Thread;
-import java.util.Vector;
 
-class ChangeStreamRunner implements Runnable {
+class ChangeStreamRunner implements Runnable, ProfilePrinter {
     public ChangeStreamRunner(MongoClient conn, String[] monitoredCollections, String[] updatedCollections) {
         client = conn;
-        //toMonitor = new Vector<String>(monitoredCollections);
-        monitors = new Vector<Thread>();
+        monitors = new Thread[monitoredCollections.length];
+        runnables = new Runnable[monitoredCollections.length];
+        
         for (int i = 0; i < monitoredCollections.length; i++) {
-            monitors.add(new Thread(new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollections[i])));
+            runnables[i] = new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollections[i]);
+            monitors[i] = new Thread(runnables[i]);
         }
     }
 
     public void run() {
-        monitors.forEach(m -> m.start());
-        monitors.forEach(m -> {
-                try {
-                    m.join();
-                }
-                catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        for (int i = 0; i < monitors.length; i++) {
+            monitors[i].start();
+        }
+        for (int i = 0; i < monitors.length; i++) {
+            try {
+                monitors[i].join();
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         
     }
 
-    MongoClient    client;
-    //Vector<String> toMonitor;
-    Vector<Thread> monitors;
+    public void printStats() {
+        long updated = 0L;
+        for (int i = 0; i < runnables.length; i++) {
+            updated += ((PerfDataCollector)runnables[i]).getAndReset();
+        }
+        System.out.printf("%d resume tokens updated\n", updated);
+    }
+
+    MongoClient client;
+    Thread[]    monitors;
+    Runnable[]  runnables;
 }
