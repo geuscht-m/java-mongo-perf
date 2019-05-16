@@ -1,6 +1,5 @@
 package com.lonecppcoder.mongo_high_load;
 
-import com.mongodb.MongoClient;
 import java.util.concurrent.atomic.AtomicLong;
 
 interface PerfDataCollector {

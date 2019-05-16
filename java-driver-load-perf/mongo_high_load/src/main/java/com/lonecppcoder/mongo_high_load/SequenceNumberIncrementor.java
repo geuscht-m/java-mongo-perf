@@ -1,15 +1,14 @@
 package com.lonecppcoder.mongo_high_load;
 
-
 import com.mongodb.MongoClient;
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 
 import org.bson.Document;
 
-import java.lang.Thread;
+//import java.lang.Thread;
 import java.lang.Runnable;
-import java.util.concurrent.ThreadLocalRandom;
+//import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
 class SequenceNumberIncrementor implements Runnable, PerfDataCollector {

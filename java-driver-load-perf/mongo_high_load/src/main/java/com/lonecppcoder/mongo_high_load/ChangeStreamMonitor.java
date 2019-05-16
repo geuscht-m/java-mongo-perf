@@ -4,6 +4,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 
@@ -25,10 +26,13 @@ class ChangeStreamMonitor implements Runnable, PerfDataCollector {
     }
     
     public void run() {
+        final FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions().upsert(true);
+        final Document findCriteria = new Document("_id", 1);
         Block<ChangeStreamDocument<Document>> updateBlock = new Block<ChangeStreamDocument<Document>>() {
+                @Override
                 public void apply(final ChangeStreamDocument<Document> d) {
                     BsonDocument resumeToken = d.getResumeToken();
-                    toColl.findOneAndUpdate(new Document("_id", 1), new Document("$set", new Document("resumeToken", resumeToken)), new FindOneAndUpdateOptions().upsert(true));
+                    toColl.findOneAndUpdate(findCriteria, new Document("$set", new Document("resumeToken", resumeToken)), opts);
                     stats.incrementAndGet();
                 }
             };

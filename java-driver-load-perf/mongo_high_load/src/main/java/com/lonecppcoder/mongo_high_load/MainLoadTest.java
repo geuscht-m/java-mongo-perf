@@ -17,9 +17,9 @@ public class MainLoadTest
 
         Runnables.add(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids"));
         Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }));
-        /*Runners.add(new Thread(new DataLoadRunner(client, new String[]{ "load_test.xml_docs.initial_load.json",
-                                                                        "load_test.documents.first_transformation.json",
-                                                                        "load_test.documents.second_transformation.json"}, 5)));*/
+        Runnables.add(new DataLoadRunner(client, new String[]{ "load_test.xml_docs.initial_load.json",
+                                                               "load_test.documents.first_transformation.json",
+                                                               "load_test.documents.second_transformation.json"}, 5));
 
         for (int i = 0; i < Runnables.size(); i++) {
             Runners.add(new Thread(Runnables.get(i)));

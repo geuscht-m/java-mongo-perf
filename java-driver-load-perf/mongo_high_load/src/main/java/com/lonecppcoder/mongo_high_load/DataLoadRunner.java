@@ -17,7 +17,8 @@ class DataLoadRunner implements Runnable, ProfilePrinter {
     public class TestDoc {
         public String dbName;
         public String collName;
-        public Document docAsBson;
+        //public Document docAsBson;
+        public String docAsString;
     }
     
     DataLoadRunner(MongoClient client, String[] documents, int parallelLoads) {
@@ -32,7 +33,7 @@ class DataLoadRunner implements Runnable, ProfilePrinter {
             docInfo.dbName = fNameParts[0];
             docInfo.collName = fNameParts[1];
             try {
-                docInfo.docAsBson = Document.parse(new String(Files.readAllBytes(Paths.get(fNameParts[2])), Charset.defaultCharset()));
+                docInfo.docAsString = new String(Files.readAllBytes(Paths.get(documents[i])), Charset.defaultCharset());
             }
             catch (IOException e) {
                 System.err.println(e);
@@ -43,13 +44,18 @@ class DataLoadRunner implements Runnable, ProfilePrinter {
     }
 
     public void run() {
-        //loaders = new Vector<Thread>();
         loaders = new Thread[numParallel];
         runnables = new Runnable[numParallel];
         for (int i = 0; i < numParallel; i++) {
             runnables[i] = new DataLoader(conn, testDocuments);
             loaders[i] = new Thread(runnables[i]);
             loaders[i].start();
+            try {
+                Thread.sleep(1);
+            }
+            catch (InterruptedException e) {
+                ;
+            }
         }
 
         for (int i = 0; i < numParallel; i++) {
@@ -67,7 +73,7 @@ class DataLoadRunner implements Runnable, ProfilePrinter {
         for (int i = 0; i < runnables.length; i++) {
             inserted += ((PerfDataCollector)runnables[i]).getAndReset();
         };
-        System.out.printf("%d documents loaded\n");
+        System.out.printf("%d documents loaded\n", inserted);
     }
 
     private MongoClient conn;
