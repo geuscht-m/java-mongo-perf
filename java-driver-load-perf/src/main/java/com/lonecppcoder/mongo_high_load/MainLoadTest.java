@@ -1,6 +1,9 @@
 package com.lonecppcoder.mongo_high_load;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+
+import org.apache.commons.cli.*;
 
 import java.lang.Thread;
 import java.util.Vector;
@@ -9,46 +12,65 @@ public class MainLoadTest
 {
     public static void main( String[] args )
     {
-        running = true;
-        MongoClient client = new MongoClient();
-        
-        Vector<Thread> Runners = new Vector<Thread>();
-        Vector<Runnable> Runnables = new Vector<Runnable>();
+        Option uri           = Option.builder("u").argName("uri").longOpt("uri").hasArg().desc("URI of MongoDB servers to connect to. Defaults to localhost:27017").build();
+        Option files         = Option.builder("f").argName("files").longOpt("files").hasArgs().desc("Comma separated list of files to use in the load runner test").build();
+        Option loaderThreads = Option.builder("l").argName("loader-threads").longOpt("loader-threads").hasArg().desc("Number of parallel document loader threads to run").build();
+        Option seqThreads    = Option.builder("s").argName("sequence-threads").longOpt("sequence-threads").hasArg().desc("Number of parallel seqence number incrememtor threads to run").build();
 
-        Runnables.add(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids"));
-        Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }));
-        Runnables.add(new DataLoadRunner(client, new String[]{ "load_test.xml_docs.initial_load.json",
-                                                               "load_test.documents.first_transformation.json",
-                                                               "load_test.documents.second_transformation.json"}, 5));
+        Options options = new Options().addOption(uri).addOption(files).addOption(loaderThreads).addOption(seqThreads);
 
-        for (int i = 0; i < Runnables.size(); i++) {
-            Runners.add(new Thread(Runnables.get(i)));
-        }
-        
-        Runners.forEach((r) -> r.start());
+        CommandLineParser parser = new DefaultParser();
 
         try {
-            while (running) {            
-                Thread.sleep(10000);
-                Runnables.forEach(r -> ((ProfilePrinter)r).printStats());
+            CommandLine cli = parser.parse(options, args);
+            String mongoURI = cli.hasOption("uri") ? cli.getOptionValue("uri") : "mongodb://localhost:27017";
+            int    numLoaders = cli.hasOption("loader-threads") ? Integer.parseInt(cli.getOptionValue("loader-threads")) : 5;
+            String[] testDocs = cli.hasOption("files")
+                ? cli.getOptionValues("files")
+                : new String[]{ "load_test.xml_docs.initial_load.json", "load_test.documents.first_transformation.json", "load_test.documents.second_transformation.json"};
+            
+            running = true;
+            MongoClient client = new MongoClient(new MongoClientURI(mongoURI));
+        
+            Vector<Thread> Runners = new Vector<Thread>();
+            Vector<Runnable> Runnables = new Vector<Runnable>();
+
+            Runnables.add(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids"));
+            Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }));
+            Runnables.add(new DataLoadRunner(client, testDocs , numLoaders));
+
+            for (int i = 0; i < Runnables.size(); i++) {
+                Runners.add(new Thread(Runnables.get(i)));
+            }
+        
+            Runners.forEach((r) -> r.start());
+
+            try {
+                while (running) {            
+                    Thread.sleep(10000);
+                    Runnables.forEach(r -> ((ProfilePrinter)r).printStats());
+                }
+            }
+            catch (InterruptedException ex) {
+                ;
+            }
+
+            try {
+                Runners.forEach(r -> {
+                        try {
+                            r.join();
+                        }
+                        catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            }
+            catch (RuntimeException e) {
+                ;
             }
         }
-        catch (InterruptedException ex) {
-            ;
-        }
-
-        try {
-            Runners.forEach(r -> {
-                    try {
-                        r.join();
-                    }
-                    catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-        }
-        catch (RuntimeException e) {
-            ;
+        catch (ParseException e) {
+            System.err.printf("Parsing command line options failed with error %s\n", e.getMessage());
         }
     }
 
