@@ -18,6 +18,30 @@ The performance tester has a couple of parameters that allow changing the overal
 - Threading controls - set the number of parallel data file loader and sequence number generator threads
 - Resume token flush interval - set the number of changestream events the change stream processes before flushing the resume token to the database
 
+The full list of support command line option can be displayed by running the jar with `-h` or `--help`:
+
+```
+usage: load-test
+ -c,--flush-after-changes <flush-after-changes>   Number of change events
+                                                  received before flushing
+                                                  change stream resume
+                                                  token. Default 1
+ -f,--files <files>                               Comma separated list of
+                                                  files to use in the load
+                                                  runner test
+ -h,--help                                        Print this message
+ -l,--loader-threads <loader-threads>             Number of parallel
+                                                  document loader threads
+                                                  to run
+ -s,--sequence-threads <sequence-threads>         Number of parallel
+                                                  seqence number
+                                                  incrememtor threads to
+                                                  run
+ -u,--uri <uri>                                   URI of MongoDB servers
+                                                  to connect to. Defaults
+                                                  to localhost:27017
+```
+
 ### Data files
 
 The test code requires a list of files to use in its data loader threads. The filenames also encode the the name of the database and collection the data gets written into and _must_ be of the format <database-name>.<collection-name>.<name>.json and _must_ contain valid JSON.
