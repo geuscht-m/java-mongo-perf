@@ -12,7 +12,8 @@ class ChangeStreamRunner implements Runnable, ProfilePrinter {
         runnables = new Runnable[monitoredCollections.length];
         
         for (int i = 0; i < monitoredCollections.length; i++) {
-            runnables[i] = new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollections[i], flushAfterChanges);
+            String updatedCollection = (i < updatedCollections.length) ? updatedCollections[i] : updatedCollections[0] + "_" + String.valueOf(i);
+            runnables[i] = new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollection, flushAfterChanges);
             monitors[i] = new Thread(runnables[i], "ChangeStreamMonitor");
         }
     }

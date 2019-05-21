@@ -19,8 +19,16 @@ public class MainLoadTest
         Option seqThreads        = Option.builder("s").argName("sequence-threads").longOpt("sequence-threads").hasArg().desc("Number of parallel seqence number incrememtor threads to run").build();
         Option flushAfterChanges = Option.builder("c").argName("flush-after-changes").longOpt("flush-after-changes").hasArg().desc("Number of change events received before flushing change stream resume token. Default 1").build();
         Option help              = Option.builder("h").argName("help").longOpt("help").desc("Print this message").build();
+        Option monitorCollection = Option.builder("m").longOpt("monitor-collection").hasArg().desc("FQ name of the collection the changestream monitors").build();
+        
 
-        Options options = new Options().addOption(uri).addOption(files).addOption(loaderThreads).addOption(seqThreads).addOption(flushAfterChanges).addOption(help);
+        Options options = new Options().addOption(uri)
+            .addOption(files)
+            .addOption(loaderThreads)
+            .addOption(seqThreads)
+            .addOption(flushAfterChanges)
+            .addOption(help)
+            .addOption(monitorCollection);
 
         CommandLineParser parser = new DefaultParser();
 
@@ -39,6 +47,9 @@ public class MainLoadTest
             String[] testDocs = cli.hasOption("files")
                 ? cli.getOptionValue("files").split(",")
                 : new String[]{ "load_test.xml_docs.initial_load.json", "load_test.documents.first_transformation.json", "load_test.documents.second_transformation.json"};
+            String[] monitorColls = cli.hasOption("m")
+                ? cli.getOptionValue("m").split(",")
+                : new String[]{ "load_test.documents" };
 
             System.out.printf("Using input document files %s\n", Arrays.toString(testDocs));
             
@@ -49,14 +60,14 @@ public class MainLoadTest
             Vector<Runnable> Runnables = new Vector<Runnable>();
 
             Runnables.add(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids"));
-            Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }, numFlushes));
+            Runnables.add(new ChangeStreamRunner(client, monitorColls, new String[]{ "load_test.doc_resume" }, numFlushes));
             Runnables.add(new DataLoadRunner(client, testDocs , numLoaders));
 
             for (int i = 0; i < Runnables.size(); i++) {
-                Runners.add(new Thread(Runnables.get(i)));
+                Thread t = new Thread(Runnables.get(i));
+                Runners.add(t);
+                t.start();
             }
-        
-            Runners.forEach((r) -> r.start());
 
             try {
                 while (running) {            

@@ -6,9 +6,7 @@ import com.mongodb.client.model.*;
 
 import org.bson.Document;
 
-//import java.lang.Thread;
 import java.lang.Runnable;
-//import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
 class SequenceNumberIncrementor implements Runnable, PerfDataCollector {

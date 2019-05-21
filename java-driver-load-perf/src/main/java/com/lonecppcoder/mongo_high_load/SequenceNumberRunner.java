@@ -38,7 +38,7 @@ class SequenceNumberRunner implements Runnable, ProfilePrinter {
         for (int i = 0; i < allSeqs.length; i++) {
             updates += ((PerfDataCollector)allSeqs[i]).getAndReset();
         }
-        System.out.printf("Updated %d sequence numbers\n", updates);
+        System.out.printf("%d sequence numbers Updated\n", updates);
     }
 
     private String[] names;
