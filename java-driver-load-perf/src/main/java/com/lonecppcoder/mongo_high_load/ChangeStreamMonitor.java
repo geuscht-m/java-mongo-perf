@@ -28,12 +28,16 @@ class ChangeStreamMonitor implements Runnable, PerfDataCollector {
     public void run() {
         final FindOneAndUpdateOptions opts = new FindOneAndUpdateOptions().upsert(true);
         final Document findCriteria = new Document("_id", 1);
+        numChanges = 0;
         Block<ChangeStreamDocument<Document>> updateBlock = new Block<ChangeStreamDocument<Document>>() {
                 @Override
                 public void apply(final ChangeStreamDocument<Document> d) {
-                    BsonDocument resumeToken = d.getResumeToken();
-                    toColl.findOneAndUpdate(findCriteria, new Document("$set", new Document("resumeToken", resumeToken)), opts);
-                    stats.incrementAndGet();
+                    if (++numChanges == 10) {
+                        BsonDocument resumeToken = d.getResumeToken();
+                        toColl.findOneAndUpdate(findCriteria, new Document("$set", new Document("resumeToken", resumeToken)), opts);
+                        stats.incrementAndGet();
+                        numChanges = 0;
+                    }
                 }
             };
         
@@ -46,6 +50,6 @@ class ChangeStreamMonitor implements Runnable, PerfDataCollector {
 
     private MongoCollection fromColl;
     private MongoCollection toColl;
-
+    private int        numChanges;
     private AtomicLong stats;
 }
