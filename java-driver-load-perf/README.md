@@ -33,6 +33,9 @@ usage: load-test
  -l,--loader-threads <loader-threads>             Number of parallel
                                                   document loader threads
                                                   to run
+ -m,--monitor-collection <arg>                    FQ name of the
+                                                  collection the
+                                                  changestream monitors
  -s,--sequence-threads <sequence-threads>         Number of parallel
                                                   seqence number
                                                   incrememtor threads to
@@ -58,5 +61,5 @@ You can also control the number of threads that update sequences numbers using t
 
 - ~~Current test document filenames are hardcoded~~
 - ~~hardcoded of document loader threads need to be configurable~~
-- Number of sequence update threads need to be configurable
+- ~~Number of sequence update threads need to be configurable~~
 - Changestream code needs some experimental code to improve/work around performance as demo
