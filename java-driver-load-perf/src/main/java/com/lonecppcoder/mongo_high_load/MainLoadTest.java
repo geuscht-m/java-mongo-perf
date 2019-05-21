@@ -12,19 +12,29 @@ public class MainLoadTest
 {
     public static void main( String[] args )
     {
-        Option uri           = Option.builder("u").argName("uri").longOpt("uri").hasArg().desc("URI of MongoDB servers to connect to. Defaults to localhost:27017").build();
-        Option files         = Option.builder("f").argName("files").longOpt("files").hasArgs().desc("Comma separated list of files to use in the load runner test").build();
-        Option loaderThreads = Option.builder("l").argName("loader-threads").longOpt("loader-threads").hasArg().desc("Number of parallel document loader threads to run").build();
-        Option seqThreads    = Option.builder("s").argName("sequence-threads").longOpt("sequence-threads").hasArg().desc("Number of parallel seqence number incrememtor threads to run").build();
+        Option uri               = Option.builder("u").argName("uri").longOpt("uri").hasArg().desc("URI of MongoDB servers to connect to. Defaults to localhost:27017").build();
+        Option files             = Option.builder("f").argName("files").longOpt("files").hasArgs().desc("Comma separated list of files to use in the load runner test").build();
+        Option loaderThreads     = Option.builder("l").argName("loader-threads").longOpt("loader-threads").hasArg().desc("Number of parallel document loader threads to run").build();
+        Option seqThreads        = Option.builder("s").argName("sequence-threads").longOpt("sequence-threads").hasArg().desc("Number of parallel seqence number incrememtor threads to run").build();
+        Option flushAfterChanges = Option.builder("c").argName("flush-after-changes").longOpt("flush-after-changes").hasArg().desc("Number of change events received before flushing change stream resume token. Default 1").build();
+        Option help              = Option.builder("h").argName("help").longOpt("help").desc("Print this message").build();
 
-        Options options = new Options().addOption(uri).addOption(files).addOption(loaderThreads).addOption(seqThreads);
+        Options options = new Options().addOption(uri).addOption(files).addOption(loaderThreads).addOption(seqThreads).addOption(flushAfterChanges).addOption(help);
 
         CommandLineParser parser = new DefaultParser();
 
         try {
             CommandLine cli = parser.parse(options, args);
+
+            if (cli.hasOption("help")) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("load-test", options);
+                return;
+            }
+            
             String mongoURI = cli.hasOption("uri") ? cli.getOptionValue("uri") : "mongodb://localhost:27017";
             int    numLoaders = cli.hasOption("loader-threads") ? Integer.parseInt(cli.getOptionValue("loader-threads")) : 5;
+            int    numFlushes = cli.hasOption("flush-after-changes") ? Integer.parseInt(cli.getOptionValue("flush-after-changes")) : 1;
             String[] testDocs = cli.hasOption("files")
                 ? cli.getOptionValues("files")
                 : new String[]{ "load_test.xml_docs.initial_load.json", "load_test.documents.first_transformation.json", "load_test.documents.second_transformation.json"};
@@ -36,7 +46,7 @@ public class MainLoadTest
             Vector<Runnable> Runnables = new Vector<Runnable>();
 
             Runnables.add(new SequenceNumberRunner(new String[]{"inserted", "updated", "updated-again"}, client, "load_test.sequence_ids"));
-            Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }));
+            Runnables.add(new ChangeStreamRunner(client, new String[]{ "load_test.documents" }, new String[]{ "load_test.doc_resume" }, numFlushes));
             Runnables.add(new DataLoadRunner(client, testDocs , numLoaders));
 
             for (int i = 0; i < Runnables.size(); i++) {

@@ -6,13 +6,13 @@ import java.lang.Runnable;
 import java.lang.Thread;
 
 class ChangeStreamRunner implements Runnable, ProfilePrinter {
-    public ChangeStreamRunner(MongoClient conn, String[] monitoredCollections, String[] updatedCollections) {
+    public ChangeStreamRunner(MongoClient conn, String[] monitoredCollections, String[] updatedCollections, int flushAfterChanges) {
         client = conn;
         monitors = new Thread[monitoredCollections.length];
         runnables = new Runnable[monitoredCollections.length];
         
         for (int i = 0; i < monitoredCollections.length; i++) {
-            runnables[i] = new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollections[i]);
+            runnables[i] = new ChangeStreamMonitor(client, monitoredCollections[i], updatedCollections[i], flushAfterChanges);
             monitors[i] = new Thread(runnables[i], "ChangeStreamMonitor");
         }
     }

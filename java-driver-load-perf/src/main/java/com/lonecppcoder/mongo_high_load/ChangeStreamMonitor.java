@@ -15,7 +15,8 @@ import java.lang.Runnable;
 import java.util.concurrent.atomic.AtomicLong;
 
 class ChangeStreamMonitor implements Runnable, PerfDataCollector {
-    public ChangeStreamMonitor(MongoClient client, String fqFromColl, String fqToColl) {
+    public ChangeStreamMonitor(MongoClient client, String fqFromColl, String fqToColl, int changesBeforeFlush) {
+        flushAfter = changesBeforeFlush;
         stats = new AtomicLong(0L);
         String dbName = fqFromColl.substring(0, fqFromColl.indexOf('.'));
         String collName = fqFromColl.substring(fqFromColl.indexOf('.') + 1);
@@ -32,7 +33,7 @@ class ChangeStreamMonitor implements Runnable, PerfDataCollector {
         Block<ChangeStreamDocument<Document>> updateBlock = new Block<ChangeStreamDocument<Document>>() {
                 @Override
                 public void apply(final ChangeStreamDocument<Document> d) {
-                    if (++numChanges == 10) {
+                    if (++numChanges == flushAfter) {
                         BsonDocument resumeToken = d.getResumeToken();
                         toColl.findOneAndUpdate(findCriteria, new Document("$set", new Document("resumeToken", resumeToken)), opts);
                         stats.incrementAndGet();
@@ -50,6 +51,7 @@ class ChangeStreamMonitor implements Runnable, PerfDataCollector {
 
     private MongoCollection fromColl;
     private MongoCollection toColl;
-    private int        numChanges;
-    private AtomicLong stats;
+    private int             flushAfter;
+    private int             numChanges;
+    private AtomicLong      stats;
 }
