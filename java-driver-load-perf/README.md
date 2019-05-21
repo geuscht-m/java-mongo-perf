@@ -32,7 +32,7 @@ You can also control the number of threads that update sequences numbers using t
 
 ## TODO:
 
-- ~~Current test document filenames are Number~~
+- ~~Current test document filenames are hardcoded~~
 - ~~hardcoded of document loader threads need to be configurable~~
 - Number of sequence update threads need to be configurable
 - Changestream code needs some experimental code to improve/work around performance as demo
