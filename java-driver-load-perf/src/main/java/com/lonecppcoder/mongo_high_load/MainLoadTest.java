@@ -7,6 +7,7 @@ import org.apache.commons.cli.*;
 
 import java.lang.Thread;
 import java.util.Vector;
+import java.util.Arrays;
 
 public class MainLoadTest
 {
@@ -36,8 +37,10 @@ public class MainLoadTest
             int    numLoaders = cli.hasOption("loader-threads") ? Integer.parseInt(cli.getOptionValue("loader-threads")) : 5;
             int    numFlushes = cli.hasOption("flush-after-changes") ? Integer.parseInt(cli.getOptionValue("flush-after-changes")) : 1;
             String[] testDocs = cli.hasOption("files")
-                ? cli.getOptionValues("files")
+                ? cli.getOptionValue("files").split(",")
                 : new String[]{ "load_test.xml_docs.initial_load.json", "load_test.documents.first_transformation.json", "load_test.documents.second_transformation.json"};
+
+            System.out.printf("Using input document files %s\n", Arrays.toString(testDocs));
             
             running = true;
             MongoClient client = new MongoClient(new MongoClientURI(mongoURI));
